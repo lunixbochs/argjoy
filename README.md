@@ -7,42 +7,44 @@ Golang module allowing you to call a method using callbacks to translate argumen
 
 You could write a function `test(a, b, c int)`, call it with `[]string{"1", "2"}`, which would effectively call `test(1, 2, 0)`.
 
-Basic example:
+Extremely basic example:
 
     package main
 
     import (
         "fmt"
         "github.com/lunixbochs/argjoy"
-        "strconv"
     )
 
+    // optC is just a variable name. The opt prefix is not required.
     func test(a, b, optC int) int {
         return a + b + optC
     }
 
     func main() {
-        aj := argjoy.NewArgjoy()
-        // this is just to demonstrate making a simple codec
-        // if you actually need string to int, argjoy.StrToInt is more robust
-        aj.Register(func(arg, val interface{}) (err error) {
-            if v, ok := val.(string); ok {
-                if a, ok := arg.(*int); ok {
-                    *a, err = strconv.Atoi(v)
-                    return
-                }
-            }
-            return argjoy.NoMatchErr
-        })
+        aj := argjoy.NewArgjoy(argjoy.StrToInt)
+        // Enables optional arguments, where unpassed arguments are zeroed.
         aj.Optional = true
 
-        // Argjoy.Call returns an interface slice: []interface{}
-        // the following is effectively: out, err := test(1, 2, 0)
-        out, err := aj.Call(test, "1", "2")
+        // The following is effectively: out := test(1, 2, 0)
+        out, err := aj.Call(test, "1", "2", "3")
         if err != nil {
             panic(err)
         }
+        // out is []interface{} so you need to do a type assert
         fmt.Println(out[0].(int))
+    }
+
+Custom argument decoder example (use [`argjoy.StrToInt`](https://github.com/lunixbochs/argjoy/blob/master/codecs.go#L9) for a more robust version of this):
+
+    func strToInt(arg, val interface{}) (err error) {
+        if v, ok := val.(string); ok {
+            if a, ok := arg.(*int); ok {
+                *a, err = strconv.Atoi(v)
+                return
+            }
+        }
+        return argjoy.NoMatchErr
     }
 
 ##Why?
