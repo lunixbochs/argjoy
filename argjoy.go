@@ -16,6 +16,7 @@ type Argjoy struct {
 	Optional bool
 }
 
+// Any codecs passed to NewArgjoy will be passed to Register() on the new instance.
 func NewArgjoy(codecs ...CodecFunc) *Argjoy {
 	n := &Argjoy{}
 	for _, codec := range codecs {

@@ -4,8 +4,8 @@ import (
 	"strconv"
 )
 
-// Codec to convert a string to any int type
-// throws bounds and sign errors as appropriate
+// Codec to convert a string to any int type.
+// Throws bounds and sign errors as appropriate
 func StrToInt(arg, val interface{}) (err error) {
 	if s, ok := val.(string); ok {
 		switch a := arg.(type) {
