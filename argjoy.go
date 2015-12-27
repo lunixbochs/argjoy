@@ -31,6 +31,24 @@ func (a *Argjoy) Register(codec CodecFunc) error {
 	return nil
 }
 
+func (a *Argjoy) translate(arg, val interface{}) error {
+	matched := false
+	// O(N) :( only way to avoid this is an arg type registry?
+	for _, codec := range a.codecs {
+		err := codec(arg, val)
+		if err == nil {
+			matched = true
+			break
+		} else if err != NoMatchErr {
+			return err
+		}
+	}
+	if !matched {
+		return NoMatchErr
+	}
+	return nil
+}
+
 // Call fn(vals...), using registered codecs to convert argument types.
 // Returns []interface{} of target function's return values.
 // Will return an error value if any codec fails.
@@ -46,21 +64,25 @@ func (a *Argjoy) Call(fn interface{}, vals ...interface{}) ([]interface{}, error
 	for i := 0; i < argCount; i++ {
 		argType := fnt.In(i)
 		arg := reflect.New(argType)
-		if i < len(vals) {
-			val := reflect.ValueOf(vals[i])
-			matched := false
-			// O(N) :( only way to avoid this is an arg type registry?
-			for _, codec := range a.codecs {
-				err := codec(arg.Interface(), val.Interface())
-				if err == nil {
-					matched = true
-					break
-				} else if err != NoMatchErr {
-					return nil, err
+		if i == argCount-1 && fnt.IsVariadic() {
+			// this condition is nested because we don't want to ever fall to the next
+			// else block on variadic functions
+			if len(vals) >= argCount {
+				varargs := reflect.MakeSlice(argType, len(vals[i:]), len(vals[i:]))
+				arg.Elem().Set(varargs)
+				for j, v := range vals[i:] {
+					// we need this because New makes a pointer
+					arg := varargs.Index(j).Addr()
+					val := reflect.ValueOf(v)
+					if err := a.translate(arg.Interface(), val.Interface()); err != nil {
+						return nil, err
+					}
 				}
 			}
-			if !matched {
-				return nil, NoMatchErr
+		} else if i < len(vals) {
+			val := reflect.ValueOf(vals[i])
+			if err := a.translate(arg.Interface(), val.Interface()); err != nil {
+				return nil, err
 			}
 		} else if a.Optional {
 			// we ran out of input and Optional arguments are enabled
@@ -72,7 +94,12 @@ func (a *Argjoy) Call(fn interface{}, vals ...interface{}) ([]interface{}, error
 		}
 		in[i] = arg.Elem()
 	}
-	out := fnv.Call(in)
+	var out []reflect.Value
+	if fnt.IsVariadic() {
+		out = fnv.CallSlice(in)
+	} else {
+		out = fnv.Call(in)
+	}
 	ret := make([]interface{}, len(out))
 	for i, v := range out {
 		ret[i] = v.Interface()
