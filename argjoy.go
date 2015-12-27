@@ -5,7 +5,7 @@ import (
 	"reflect"
 )
 
-type CodecFunc func(arg, val interface{}) error
+type CodecFunc func(arg interface{}, vals []interface{}) error
 
 type Argjoy struct {
 	codecs []CodecFunc
@@ -31,11 +31,11 @@ func (a *Argjoy) Register(codec CodecFunc) error {
 	return nil
 }
 
-func (a *Argjoy) translate(arg, val interface{}) error {
+func (a *Argjoy) translate(arg interface{}, vals []interface{}) error {
 	matched := false
 	// O(N) :( only way to avoid this is an arg type registry?
 	for _, codec := range a.codecs {
-		err := codec(arg, val)
+		err := codec(arg, vals)
 		if err == nil {
 			matched = true
 			break
@@ -44,7 +44,7 @@ func (a *Argjoy) translate(arg, val interface{}) error {
 		}
 	}
 	if !matched {
-		return &NoMatchErr{fmt.Sprintf("%T -> %T", val, arg)}
+		return &NoMatchErr{fmt.Sprintf("%T -> %T", vals[0], arg)}
 	}
 	return nil
 }
@@ -68,18 +68,16 @@ func (a *Argjoy) Convert(fn interface{}, vals ...interface{}) ([]reflect.Value, 
 			if len(vals) >= argCount {
 				varargs := reflect.MakeSlice(argType, len(vals[i:]), len(vals[i:]))
 				arg.Elem().Set(varargs)
-				for j, v := range vals[i:] {
+				for j := range vals[i:] {
 					// we need this because New makes a pointer
 					arg := varargs.Index(j).Addr()
-					val := reflect.ValueOf(v)
-					if err := a.translate(arg.Interface(), val.Interface()); err != nil {
+					if err := a.translate(arg.Interface(), vals[i+j:]); err != nil {
 						return nil, err
 					}
 				}
 			}
 		} else if i < len(vals) {
-			val := reflect.ValueOf(vals[i])
-			if err := a.translate(arg.Interface(), val.Interface()); err != nil {
+			if err := a.translate(arg.Interface(), vals[i:]); err != nil {
 				return nil, err
 			}
 		} else if a.Optional {

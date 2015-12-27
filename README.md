@@ -35,8 +35,8 @@ Extremely basic example:
 
 Custom argument decoder example (use [`argjoy.StrToInt`](https://github.com/lunixbochs/argjoy/blob/master/codecs.go#L9) for a more robust version of this):
 
-    func strToInt(arg, val interface{}) (err error) {
-        if v, ok := val.(string); ok {
+    func strToInt(arg interface{}, vals []interface{}) (err error) {
+        if v, ok := val[0].(string); ok {
             if a, ok := arg.(*int); ok {
                 *a, err = strconv.Atoi(v)
                 return

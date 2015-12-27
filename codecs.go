@@ -6,8 +6,8 @@ import (
 
 // Codec to convert a string to any int type.
 // Throws bounds and sign errors as appropriate
-func StrToInt(arg, val interface{}) (err error) {
-	if s, ok := val.(string); ok {
+func StrToInt(arg interface{}, vals []interface{}) (err error) {
+	if s, ok := vals[0].(string); ok {
 		switch a := arg.(type) {
 		case *uint:
 			var n uint64
