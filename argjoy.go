@@ -49,14 +49,12 @@ func (a *Argjoy) translate(arg, val interface{}) error {
 	return nil
 }
 
-// Call fn(vals...), using registered codecs to convert argument types.
-// Returns []interface{} of target function's return values.
-// Will return an error value if any codec fails.
-// Panics if fn is not a valid function.
-func (a *Argjoy) Call(fn interface{}, vals ...interface{}) ([]interface{}, error) {
+// Produce a list of arguments suitable for invoking reflect.Call(fn, args).
+// If fn is variadic, you must instead use reflect.CallSlice(fn, args).
+func (a *Argjoy) Convert(fn interface{}, vals ...interface{}) ([]reflect.Value, error) {
 	fnv := reflect.ValueOf(fn)
 	if fnv.Kind() != reflect.Func {
-		panic(fmt.Sprintf("Argjoy.Call() requires function as first argument, got: (%T)%#v", fn, fn))
+		panic(fmt.Sprintf("function expected as first argument, got: (%T)%#v", fn, fn))
 	}
 	fnt := fnv.Type()
 	argCount := fnt.NumIn()
@@ -93,6 +91,20 @@ func (a *Argjoy) Call(fn interface{}, vals ...interface{}) ([]interface{}, error
 		}
 		in[i] = arg.Elem()
 	}
+	return in, nil
+}
+
+// Call fn(vals...), using registered codecs to convert argument types.
+// Returns []interface{} of target function's return values.
+// Will return an error value if any codec fails.
+// Panics if fn is not a valid function.
+func (a *Argjoy) Call(fn interface{}, vals ...interface{}) ([]interface{}, error) {
+	in, err := a.Convert(fn, vals...)
+	if err != nil {
+		return nil, err
+	}
+	fnv := reflect.ValueOf(fn)
+	fnt := fnv.Type()
 	var out []reflect.Value
 	if fnt.IsVariadic() {
 		out = fnv.CallSlice(in)
