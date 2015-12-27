@@ -5,8 +5,6 @@
 
 Golang module allowing you to call a method using callbacks to translate arguments. Also allows optional arguments.
 
-You could write a function `test(a, b, c int)`, call it with `[]string{"1", "2"}`, which would effectively call `test(1, 2, 0)`.
-
 Extremely basic example:
 
     package main
@@ -27,7 +25,7 @@ Extremely basic example:
         aj.Optional = true
 
         // The following is effectively: out := test(1, 2, 0)
-        out, err := aj.Call(test, "1", "2", "3")
+        out, err := aj.Call(test, "1", "2")
         if err != nil {
             panic(err)
         }
