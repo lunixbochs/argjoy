@@ -39,9 +39,9 @@ func StrToInt(arg, val interface{}) (err error) {
 		case *int64:
 			*a, err = strconv.ParseInt(s, 10, 64)
 		default:
-			return NoMatchErr
+			return NoMatch
 		}
 		return
 	}
-	return NoMatchErr
+	return NoMatch
 }

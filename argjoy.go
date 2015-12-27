@@ -39,12 +39,12 @@ func (a *Argjoy) translate(arg, val interface{}) error {
 		if err == nil {
 			matched = true
 			break
-		} else if err != NoMatchErr {
+		} else if _, ok := err.(*NoMatchErr); !ok {
 			return err
 		}
 	}
 	if !matched {
-		return NoMatchErr
+		return &NoMatchErr{fmt.Sprintf("%T -> %T", val, arg)}
 	}
 	return nil
 }
@@ -89,8 +89,7 @@ func (a *Argjoy) Call(fn interface{}, vals ...interface{}) ([]interface{}, error
 			// so the rest of the args are zeroed (which happens automatically on reflect.New())
 		} else {
 			// we ran out of input and Optional arguments are disabled
-			// so... panic or error?
-			return nil, ArgCountErr
+			return nil, &ArgCountErr{len(vals), argCount}
 		}
 		in[i] = arg.Elem()
 	}

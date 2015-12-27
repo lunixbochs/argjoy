@@ -1,8 +1,21 @@
 package argjoy
 
-import "errors"
+import "fmt"
 
-var (
-	NoMatchErr  = errors.New("Argument type has no matching codec")
-	ArgCountErr = errors.New("Argument count mismatch")
-)
+type NoMatchErr struct {
+	desc string
+}
+
+func (e NoMatchErr) Error() string {
+	return fmt.Sprintf("Argument conversion (%T) has no matching codec", e.desc)
+}
+
+var NoMatch = &NoMatchErr{}
+
+type ArgCountErr struct {
+	have, want int
+}
+
+func (e ArgCountErr) Error() string {
+	return fmt.Sprintf("Argument count mismatch. Have %d, want %d", e.have, e.want)
+}

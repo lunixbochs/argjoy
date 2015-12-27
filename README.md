@@ -42,7 +42,7 @@ Custom argument decoder example (use [`argjoy.StrToInt`](https://github.com/luni
                 return
             }
         }
-        return argjoy.NoMatchErr
+        return argjoy.NoMatch
     }
 
 ##Why?
