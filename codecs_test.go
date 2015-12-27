@@ -5,6 +5,8 @@ import (
 	"testing"
 )
 
+// StrToInt tests
+
 var StrToIntArgjoy = NewArgjoy(StrToInt)
 
 func strToIntTest(a int, b uint, c int32, d int64, e uint32, f uint64) int64 {
@@ -47,5 +49,51 @@ func TestStrToIntOptional(t *testing.T) {
 	}
 	if out[0].(int64) != 0 {
 		t.Fatalf("weird return from StrToInt optional test: %v\n", out[0])
+	}
+}
+
+// IntToInt tests
+
+var IntToIntArgjoy = NewArgjoy(IntToInt)
+
+func intToIntTest(a int, b int8, c int16, d int32, e int64, f uint, g uint8, h uint16, i uint32, j uint64) int64 {
+	return int64(a) + int64(b) + int64(c) + int64(d) + int64(e) + int64(f) + int64(g) + int64(h) + int64(i) + int64(j)
+}
+
+func TestIntToInt(t *testing.T) {
+	out, err := IntToIntArgjoy.Call(intToIntTest, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if out[0].(int64) != 55 {
+		t.Fatalf("invalid result: %v != 55\n", out[0])
+	}
+}
+
+func TestIntToIntBounds(t *testing.T) {
+	IntToIntArgjoy.Optional = true
+	_, err := IntToIntArgjoy.Call(intToIntTest, 0, 1000)
+	if err == nil {
+		t.Error("failed to throw error on int8 overflow")
+	}
+	_, err = IntToIntArgjoy.Call(intToIntTest, 0, -1000)
+	if err == nil {
+		t.Error("failed to throw error on int8 underflow")
+	}
+	_, err = IntToIntArgjoy.Call(intToIntTest, 0, 0, 0, 0, 0, -1000)
+	if err == nil {
+		t.Error("failed to throw error on uint8 underflow")
+	}
+	_, err = IntToIntArgjoy.Call(intToIntTest, 0, 0, 0, 0, 0, 0, 1000)
+	if err == nil {
+		t.Error("failed to throw error on uint8 overflow")
+	}
+	_, err = IntToIntArgjoy.Call(intToIntTest, 0, 0, 0, 0, ^uint64(0))
+	if err == nil {
+		t.Error("failed to throw error on int64 overflow with uint64_max input")
+	}
+	_, err = IntToIntArgjoy.Call(intToIntTest, 0, 0, 0, 0, 0, 0, 0, 0, 0, ^int64((1<<63)-1))
+	if err == nil {
+		t.Error("failed to throw error on uint64 underflow with int64_min input")
 	}
 }
