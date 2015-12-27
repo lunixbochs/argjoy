@@ -53,6 +53,19 @@ func (a *Argjoy) translate(arg interface{}, vals []interface{}) error {
 // produce a list of arguments suitable for invoking reflect.Call(fn, args).
 // If fn is variadic, you must instead use reflect.CallSlice(fn, args).
 func (a *Argjoy) Convert(in []reflect.Type, variadic bool, vals ...interface{}) ([]reflect.Value, error) {
+	var vals2 []interface{}
+	for _, v := range vals {
+		slice := reflect.ValueOf(v)
+		if slice.Kind() == reflect.Slice {
+			for i := 0; i < slice.Len(); i++ {
+				vals2 = append(vals2, slice.Index(i).Interface())
+			}
+		} else {
+			vals2 = append(vals2, v)
+		}
+	}
+	vals = vals2
+
 	ret := make([]reflect.Value, len(in))
 	for i, argType := range in {
 		arg := reflect.New(argType)
