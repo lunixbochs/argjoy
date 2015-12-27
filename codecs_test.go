@@ -23,7 +23,6 @@ func TestStrToInt(t *testing.T) {
 
 func TestStrToIntBounds(t *testing.T) {
 	ofi32 := strconv.FormatInt((1<<62)-1, 10)
-	t.Log(ofi32)
 	if _, err := StrToIntArgjoy.Call(strToIntTest, "0", "0", ofi32, "0", "0", "0"); err == nil {
 		t.Error("32-bit signed integer overflow check failed")
 	}
