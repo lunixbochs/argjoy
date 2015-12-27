@@ -7,7 +7,7 @@ type NoMatchErr struct {
 }
 
 func (e NoMatchErr) Error() string {
-	return fmt.Sprintf("Argument conversion (%T) has no matching codec", e.desc)
+	return fmt.Sprintf("Argument conversion (%s) has no matching codec", e.desc)
 }
 
 var NoMatch = &NoMatchErr{}
