@@ -44,6 +44,12 @@ func (a *Argjoy) translate(arg interface{}, vals []interface{}) error {
 		}
 	}
 	if !matched {
+		// if types are equal, at this point assign arg = vals[0]
+		// TODO: maybe make this step configurable
+		if reflect.TypeOf(arg).Elem() == reflect.TypeOf(vals[0]) {
+			reflect.ValueOf(arg).Elem().Set(reflect.ValueOf(vals[0]))
+			return nil
+		}
 		return &NoMatchErr{fmt.Sprintf("%T -> %T", vals[0], arg)}
 	}
 	return nil
