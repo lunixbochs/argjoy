@@ -3,48 +3,48 @@ package argjoy
 import (
 	"fmt"
 	"strconv"
+	"strings"
 )
 
-// Codec to convert a string to any int type.
-// Throws bounds and sign errors as appropriate.
-func StrToInt(arg interface{}, vals []interface{}) (err error) {
+func strBaseToInt(arg interface{}, vals []interface{}, base int) error {
 	if s, ok := vals[0].(string); ok {
-		switch a := arg.(type) {
-		case *uint:
-			var n uint64
-			// we don't actually know uint and int sizes without doing math
-			if ^(uint(0)) == (1<<32)-1 {
-				n, err = strconv.ParseUint(s, 10, 32)
-			} else {
-				n, err = strconv.ParseUint(s, 10, 64)
+		// we only need to ParseInt on a leading negative sign
+		if len(s) > 0 && s[0] == '-' {
+			// parsing signed int
+			n, err := strconv.ParseInt(s, base, 64)
+			if err != nil {
+				return err
 			}
-			*a = uint(n)
-		case *int:
-			var n int64
-			if ^(uint(0)) == (1<<32)-1 {
-				n, err = strconv.ParseInt(s, 10, 32)
-			} else {
-				n, err = strconv.ParseInt(s, 10, 64)
+			return IntToInt(arg, []interface{}{n})
+		} else if base == 0 && strings.HasPrefix(s, "0b") {
+			// parse base-2 int
+			n, err := strconv.ParseUint(s[2:], 2, 64)
+			if err != nil {
+				return err
 			}
-			*a = int(n)
-		case *uint32:
-			var n uint64
-			n, err = strconv.ParseUint(s, 10, 32)
-			*a = uint32(n)
-		case *uint64:
-			*a, err = strconv.ParseUint(s, 10, 64)
-		case *int32:
-			var n int64
-			n, err = strconv.ParseInt(s, 10, 32)
-			*a = int32(n)
-		case *int64:
-			*a, err = strconv.ParseInt(s, 10, 64)
-		default:
-			return NoMatch
+			return IntToInt(arg, []interface{}{n})
+		} else {
+			// parsing unsigned int
+			n, err := strconv.ParseUint(s, base, 64)
+			if err != nil {
+				return err
+			}
+			return IntToInt(arg, []interface{}{n})
 		}
-		return
 	}
 	return NoMatch
+}
+
+// Codec to convert a string to any int type (base 10 forced).
+// Throws bounds and sign errors as appropriate.
+func StrToInt(arg interface{}, vals []interface{}) error {
+	return strBaseToInt(arg, vals, 10)
+}
+
+// Codec to convert radix notations like hex, octal, binary to int.
+// Throws bounds and sign errors as appropriate.
+func RadStrToInt(arg interface{}, vals []interface{}) error {
+	return strBaseToInt(arg, vals, 0)
 }
 
 // Codec to convert between any builtin int types.
@@ -120,7 +120,8 @@ func IntToInt(arg interface{}, vals []interface{}) (err error) {
 	// assignment
 	if ival != 0 {
 		// signed
-		if ival < min || uint64(ival) > max {
+		// the sign bit is cleared on max to prevent the cast from forcing it negative
+		if ival < min || ival > int64(max&^(1<<63)) {
 			return fmt.Errorf("int arg (%d) outside range for type (%T)", ival, arg)
 		}
 		switch a := arg.(type) {
@@ -146,8 +147,8 @@ func IntToInt(arg interface{}, vals []interface{}) (err error) {
 			*a = uint64(ival)
 		}
 	} else {
-		if int64(uval) < min || uval > max {
-			return fmt.Errorf("int arg (%d) outside range for type (%T)", ival, arg)
+		if uval > max {
+			return fmt.Errorf("uint arg (%d) outside range for type (%T)", ival, arg)
 		}
 		// unsigned
 		switch a := arg.(type) {

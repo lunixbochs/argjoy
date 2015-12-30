@@ -52,6 +52,35 @@ func TestStrToIntOptional(t *testing.T) {
 	}
 }
 
+// RadStrToInt tests
+
+var RadStrToIntArgjoy = NewArgjoy(RadStrToInt)
+
+func radStrToIntTest(args ...int) int {
+	acc := 0
+	for _, v := range args {
+		acc += v
+	}
+	return acc
+}
+
+func TestRadStrToInt(t *testing.T) {
+	out, err := RadStrToIntArgjoy.Call(radStrToIntTest, "10", "0x10", "010", "0b10", "-01", "-0x1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if out[0].(int) != 34 {
+		t.Fatalf("invalid result: %v != 34\n", out[0])
+	}
+}
+
+func TestRadStrToIntErr(t *testing.T) {
+	_, err := RadStrToIntArgjoy.Call(radStrToIntTest, "-0xFFFFFFFFFFFFFFFFFFFFFF")
+	if err == nil {
+		t.Error("failed to throw error on invalid rad str input")
+	}
+}
+
 // IntToInt tests
 
 var IntToIntArgjoy = NewArgjoy(IntToInt)
