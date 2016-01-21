@@ -148,7 +148,7 @@ func IntToInt(arg interface{}, vals []interface{}) (err error) {
 		}
 	} else {
 		if uval > max {
-			return fmt.Errorf("uint arg (%d) outside range for type (%T)", ival, arg)
+			return fmt.Errorf("uint arg (%d) outside range for type (%T)", uval, arg)
 		}
 		// unsigned
 		switch a := arg.(type) {
