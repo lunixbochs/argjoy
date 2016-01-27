@@ -8,7 +8,7 @@ import (
 type CodecFunc func(arg interface{}, vals []interface{}) error
 
 type Argjoy struct {
-	codecs []CodecFunc
+	Codecs []CodecFunc
 
 	// Determines whether unpassed arguments are optional.
 	// If this is false, invoking Call() with insufficient number of arguments
@@ -27,14 +27,14 @@ func NewArgjoy(codecs ...CodecFunc) *Argjoy {
 
 // Registers a new codec function which will be used to convert arguments during Call()
 func (a *Argjoy) Register(codec CodecFunc) error {
-	a.codecs = append(a.codecs, codec)
+	a.Codecs = append(a.Codecs, codec)
 	return nil
 }
 
 func (a *Argjoy) translate(arg interface{}, vals []interface{}) error {
 	matched := false
 	// O(N) :( only way to avoid this is an arg type registry?
-	for _, codec := range a.codecs {
+	for _, codec := range a.Codecs {
 		err := codec(arg, vals)
 		if err == nil {
 			matched = true
