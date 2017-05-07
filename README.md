@@ -1,4 +1,4 @@
-#argjoy
+# argjoy
 
 [![Build Status](https://travis-ci.org/lunixbochs/argjoy.svg?branch=master)](https://travis-ci.org/lunixbochs/argjoy)
 [![GoDoc](https://godoc.org/github.com/lunixbochs/argjoy?status.svg)](http://godoc.org/github.com/lunixbochs/argjoy)
@@ -45,7 +45,7 @@ Custom argument decoder example (use [`argjoy.StrToInt`](https://github.com/luni
         return argjoy.NoMatch
     }
 
-##Why?
+## Why?
 
 Reduces duplicate decoding logic. Repeated decoding like `v, err := strconv.Atoi(); if err != nil` is completely eliminated.
 
